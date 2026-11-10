@@ -7,10 +7,11 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { Deco } from "@/components/ui/deco";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { ProjectGallery } from "@/components/sections/project-gallery";
+import { BeforeAfter } from "@/components/sections/before-after";
 import { assets } from "@/lib/assets";
-import { getProjectPhotos } from "@/lib/photos";
-import { interiorFooterNav, homeNav } from "@/data/site";
-import { projects, getProject, nextProject } from "@/data/projects";
+import { getBeforeAfter, getProjectPhotos } from "@/lib/photos";
+import { footerNav, interiorNav } from "@/data/site";
+import { projects, getProject, nextProject, categoryLabel } from "@/data/projects";
 
 const BODY_WIDTH = 1100;
 
@@ -38,12 +39,15 @@ export default async function ProjectPage({
   const project = getProject(slug);
   if (!project) notFound();
 
-  const { cover, gallery } = await getProjectPhotos(project.slug);
+  const [{ cover, gallery }, pairs] = await Promise.all([
+    getProjectPhotos(project.slug),
+    getBeforeAfter(project.slug, project.beforeAfter),
+  ]);
   const next = nextProject(project.slug);
 
   return (
     <PageShell>
-      <SiteHeader variant="frosted" maxWidth={BODY_WIDTH} links={homeNav} />
+      <SiteHeader variant="frosted" maxWidth={BODY_WIDTH} links={interiorNav} />
 
       {/* ===================== BREADCRUMB + TITLE ===================== */}
       <section
@@ -51,13 +55,15 @@ export default async function ProjectPage({
         style={{ maxWidth: BODY_WIDTH, padding: "clamp(34px,5vw,60px) var(--page-gutter) clamp(20px,3vw,32px)" }}
       >
         <Deco asset={assets.star} show="md" style={{ width: "clamp(30px,3.4vw,46px)", top: "8%", right: "3%", opacity: 0.55 }} />
-        <Link
-          href="/#work"
-          className="navlink font-mono uppercase text-accent no-underline"
-          style={{ fontSize: 12, letterSpacing: ".12em" }}
-        >
-          ← Selected work
-        </Link>
+        <nav aria-label="Breadcrumb" className="font-mono uppercase" style={{ fontSize: 12, letterSpacing: ".12em" }}>
+          <Link href="/work" className="navlink" style={{ color: "var(--color-accent)" }}>
+            Work
+          </Link>
+          <span className="text-ink-muted" style={{ margin: "0 10px" }}>/</span>
+          <Link href={`/work/${project.category}`} className="navlink" style={{ color: "var(--color-accent)" }}>
+            {categoryLabel(project.category)}
+          </Link>
+        </nav>
         <h1
           className="font-serif font-medium"
           style={{ fontSize: "clamp(40px,7vw,82px)", lineHeight: 1, letterSpacing: "-.015em", margin: "clamp(18px,3vw,30px) 0 0" }}
@@ -101,6 +107,7 @@ export default async function ProjectPage({
         alt={project.name}
         summary={project.summary}
         layout={project.layout}
+        afterSummary={<BeforeAfter pairs={pairs} />}
       />
 
       {/* ========================= NEXT PROJECT ========================= */}
@@ -117,7 +124,7 @@ export default async function ProjectPage({
         </div>
       </Link>
 
-      <SiteFooter links={interiorFooterNav} maxWidth={BODY_WIDTH} />
+      <SiteFooter links={footerNav} maxWidth={BODY_WIDTH} />
     </PageShell>
   );
 }

@@ -10,6 +10,8 @@
  *    With no `hero.*`, the first image (natural sort) is used as the cover.
  *  - Every other image becomes a gallery photo, ordered by filename
  *    (natural/numeric sort, so `2.webp` comes before `10.webp`).
+ *  - Images in a `before/` subfolder are "before" photos for transformation
+ *    projects (kept out of the gallery; paired via `beforeAfter`).
  *
  * Server-only: uses `node:fs` and `sharp`, and only runs during static
  * generation. Do not import from a Client Component.
@@ -27,7 +29,25 @@ export type ProjectPhotos = {
   cover?: ImageAsset;
   /** Remaining photos for the detail-page gallery, in filename order. */
   gallery: ImageAsset[];
+  /** Photos in a `before/` subfolder (transformation projects), in filename order. */
+  before: ImageAsset[];
 };
+
+function listImages(dir: string): string[] {
+  try {
+    return fs
+      .readdirSync(dir)
+      .filter((f) => IMAGE_RE.test(f))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  } catch {
+    return [];
+  }
+}
+
+async function getBeforePhotos(slug: string): Promise<ImageAsset[]> {
+  const files = listImages(path.join(PROJECTS_DIR, slug, "before"));
+  return Promise.all(files.map((f) => toAsset(slug, `before/${f}`)));
+}
 
 async function toAsset(slug: string, file: string): Promise<ImageAsset> {
   const { width, height } = await sharp(path.join(PROJECTS_DIR, slug, file)).metadata();
@@ -42,7 +62,7 @@ export async function getProjectPhotos(slug: string): Promise<ProjectPhotos> {
   try {
     files = fs.readdirSync(path.join(PROJECTS_DIR, slug)).filter((f) => IMAGE_RE.test(f));
   } catch {
-    return { gallery: [] }; // no folder yet → placeholders render
+    return { gallery: [], before: [] }; // no folder yet → placeholders render
   }
 
   files.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
@@ -55,5 +75,35 @@ export async function getProjectPhotos(slug: string): Promise<ProjectPhotos> {
     Promise.all(galleryFiles.map((f) => toAsset(slug, f))),
   ]);
 
-  return { cover, gallery };
+  return { cover, gallery, before: await getBeforePhotos(slug) };
+}
+
+/**
+ * Read a single image under `public/` (e.g. "/space-planning/a.webp") into an
+ * ImageAsset. Returns undefined if the file is missing, so pages can fall back
+ * to a placeholder instead of failing the build.
+ */
+export async function getPublicImage(publicPath: string): Promise<ImageAsset | undefined> {
+  const file = path.join(process.cwd(), "public", publicPath);
+  if (!fs.existsSync(file)) return undefined;
+  const { width, height } = await sharp(file).metadata();
+  if (!width || !height) return undefined;
+  return { src: publicPath, width, height };
+}
+
+
+export type BeforeAfterPair = { before: ImageAsset; after?: ImageAsset };
+
+/** Resolve a project's `beforeAfter` pairs (paths relative to its folder). */
+export async function getBeforeAfter(
+  slug: string,
+  pairs: { before: string; after?: string }[] = [],
+): Promise<BeforeAfterPair[]> {
+  const resolved = await Promise.all(
+    pairs.map(async (p) => ({
+      before: await getPublicImage(`/projects/${slug}/${p.before}`),
+      after: p.after ? await getPublicImage(`/projects/${slug}/${p.after}`) : undefined,
+    })),
+  );
+  return resolved.flatMap((p) => (p.before ? [{ before: p.before, after: p.after }] : []));
 }

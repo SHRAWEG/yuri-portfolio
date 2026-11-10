@@ -25,7 +25,11 @@ export function NavLink({ href, children, className, download }: NavLinkProps) {
       <a
         href={href}
         className={classes}
-        {...(download ? { download: true, target: "_blank", rel: "noopener noreferrer" } : {})}
+        {...(download
+          ? { download: true, target: "_blank", rel: "noopener noreferrer" }
+          : href.startsWith("http")
+            ? { target: "_blank", rel: "noopener noreferrer" }
+            : {})}
       >
         {children}
       </a>

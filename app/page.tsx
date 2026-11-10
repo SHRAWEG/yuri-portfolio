@@ -4,11 +4,14 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { Deco } from "@/components/ui/deco";
 import { ButtonLink } from "@/components/ui/button";
-import { ProjectCard } from "@/components/sections/project-card";
+import { Eyebrow } from "@/components/ui/eyebrow";
+import { ProjectsHeading } from "@/components/sections/projects-heading";
+import { FeaturedProjects } from "@/components/sections/featured-projects";
+import { ContactSection } from "@/components/sections/contact-section";
 import { assets } from "@/lib/assets";
-import { getProjectPhotos } from "@/lib/photos";
-import { homeNav, homeFooterNav, site } from "@/data/site";
+import { homeNav, footerNav } from "@/data/site";
 import { projects } from "@/data/projects";
+import { getFeaturedItems } from "@/lib/featured";
 
 const MAX_WIDTH = 1240;
 
@@ -21,12 +24,8 @@ const introSerifStyle = {
 } as const;
 
 export default async function HomePage() {
-  // Discover each project's cover photo (from public/projects/<slug>/) at build time.
-  const covers = await Promise.all(
-    projects.map((project) =>
-      getProjectPhotos(project.slug).then((p) => p.cover),
-    ),
-  );
+  // Hand-picked lineup from data/featured.ts, with photos resolved at build time.
+  const featuredItems = await getFeaturedItems();
 
   return (
     <PageShell>
@@ -202,7 +201,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* =========================== PROJECTS =========================== */}
+      {/* ========================= SELECTED WORK ========================= */}
       <section
         id="work"
         className="relative mx-auto scroll-mt-24"
@@ -224,119 +223,36 @@ export default async function HomePage() {
 
         <div
           className="relative flex flex-col items-center text-center"
-          style={{ marginBottom: "clamp(26px,3.5vw,44px)" }}
+          style={{ marginBottom: "clamp(40px,6vw,80px)" }}
         >
-          <div
-            className="relative inline-block"
-            style={{ width: "min(600px, 74vw)" }}
-          >
-            <Image
-              src={assets.projectsSwirl.src}
-              alt=""
-              aria-hidden
-              width={assets.projectsSwirl.width}
-              height={assets.projectsSwirl.height}
-              className="pointer-events-none"
-              style={{
-                position: "absolute",
-                left: "-5%",
-                top: "-33%",
-                width: "150%",
-                height: "auto",
-                zIndex: 1,
-                opacity: 0.95,
-              }}
-            />
-            <Image
-              src={assets.projectsLettering.src}
-              alt="Projects"
-              width={assets.projectsLettering.width}
-              height={assets.projectsLettering.height}
-              className="relative block"
-              style={{ zIndex: 2, width: "100%", height: "auto" }}
-            />
-          </div>
+          <ProjectsHeading />
+          <Eyebrow size={11} tracking=".22em" style={{ marginTop: "clamp(10px,1.6vw,18px)" }}>
+            Selected work
+          </Eyebrow>
         </div>
+
+        <FeaturedProjects items={featuredItems} />
 
         <div
-          className="grid"
-          style={{
-            gridTemplateColumns:
-              "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
-            gap: "clamp(20px,2.4vw,32px)",
-          }}
+          className="flex flex-col items-center text-center"
+          style={{ marginTop: "clamp(64px,9vw,120px)", gap: 18 }}
         >
-          {projects.map((project, i) => (
-            <ProjectCard
-              key={project.slug}
-              project={project}
-              cover={covers[i]}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* =========================== CONTACT =========================== */}
-      <section
-        id="contact"
-        className="relative mx-auto overflow-hidden text-center scroll-mt-24"
-        style={{
-          maxWidth: MAX_WIDTH,
-          padding: "clamp(56px,9vw,120px) var(--page-gutter)",
-        }}
-      >
-        <Deco
-          asset={assets.star}
-          show="md"
-          style={{
-            width: "clamp(34px,4vw,56px)",
-            bottom: "14%",
-            right: "6%",
-            opacity: 0.8,
-          }}
-        />
-        <Deco
-          asset={assets.greenFlower}
-          style={{
-            width: "clamp(24px,3vw,40px)",
-            top: 99,
-            left: 87,
-            opacity: 0.9,
-          }}
-        />
-
-        <div className="relative z-2 mx-auto" style={{ maxWidth: 680 }}>
-          <h2
-            className="font-serif font-medium"
-            style={{
-              fontSize: "clamp(36px,6.5vw,76px)",
-              lineHeight: 1.02,
-              margin: "0 0 20px",
-              letterSpacing: "-.015em",
-            }}
-          >
-            Let&apos;s design
-            <br />
-            &nbsp;something together.
-          </h2>
-          <div className="flex flex-wrap items-center justify-center" style={{ gap: "clamp(12px,2vw,20px)" }}>
-            <ButtonLink href={`mailto:${site.email}`} variant="solid">
-              {site.email}
-            </ButtonLink>
-            <ButtonLink href={site.cvHref} variant="ghost" download>
-              Download CV
-            </ButtonLink>
-          </div>
           <p
-            className="font-mono text-ink-muted"
-            style={{ fontSize: 12, letterSpacing: ".08em", margin: "26px 0 0" }}
+            className={introSerif}
+            style={{ ...introSerifStyle, margin: 0, maxWidth: 520 }}
           >
-            {site.location}
+            More homes, hotels and cafés — plus space-planning layouts — on the
+            work page.
           </p>
+          <ButtonLink href="/work" variant="solid">
+            View all {projects.length} projects →
+          </ButtonLink>
         </div>
       </section>
 
-      <SiteFooter links={homeFooterNav} maxWidth={MAX_WIDTH} />
+      <ContactSection maxWidth={MAX_WIDTH} />
+
+      <SiteFooter links={footerNav} maxWidth={MAX_WIDTH} />
     </PageShell>
   );
 }

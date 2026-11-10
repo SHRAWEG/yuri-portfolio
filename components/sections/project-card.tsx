@@ -11,7 +11,16 @@ import type { ImageAsset } from "@/lib/assets";
  * at build time) when one exists; otherwise a patterned placeholder stands in
  * until photos are added.
  */
-export function ProjectCard({ project, cover }: { project: Project; cover?: ImageAsset }) {
+export function ProjectCard({
+  project,
+  cover,
+  eyebrow,
+}: {
+  project: Project;
+  cover?: ImageAsset;
+  /** Optional small label above the title (e.g. the category on `/work`). */
+  eyebrow?: string;
+}) {
   return (
     <Link className="pcard" href={`/projects/${project.slug}`}>
       <div
@@ -32,6 +41,7 @@ export function ProjectCard({ project, cover }: { project: Project; cover?: Imag
             width={cover.width}
             height={cover.height}
             className="absolute inset-0 h-full w-full"
+            sizes="(max-width: 640px) 100vw, 400px"
             style={{ objectFit: "cover" }}
           />
         ) : (
@@ -45,6 +55,14 @@ export function ProjectCard({ project, cover }: { project: Project; cover?: Imag
       </div>
 
       <div style={{ marginTop: 13 }}>
+        {eyebrow && (
+          <p
+            className="font-mono uppercase text-accent"
+            style={{ fontSize: 10, letterSpacing: ".2em", margin: "0 0 6px" }}
+          >
+            {eyebrow}
+          </p>
+        )}
         <h3
           className="font-serif font-medium text-ink"
           style={{ fontSize: "clamp(20px, 2.4vw, 25px)", margin: 0, lineHeight: 1.15 }}

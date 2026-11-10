@@ -7,39 +7,46 @@ export const site = {
   name: "Yuri Bajracharya",
   role: "Interior Architect",
   location: "Kathmandu, Nepal",
-  /** Primary contact shown in the Home hero/contact section. */
+  /** The one email used everywhere (contact section, footer, mailto links). */
   email: "yuribajracharya@gmail.com",
-  /** Secondary contact used on the About page CTA + footer email link. */
-  contactEmail: "hello@yuribajracharya.com",
-  /** CV/résumé PDF served from `public/` (user-provided), linked from the About CTA. */
+  /** Subject line pre-filled when someone clicks "Write an email". */
+  emailSubject: "Project enquiry",
+  /** Instagram handle, without the "@". */
+  instagram: "archililyy",
+  /** CV/résumé PDF served from `public/` (user-provided). */
   cvHref: "/yuri-bajracharya-cv.pdf",
   copyright: "© 2026 · Made by hand",
 } as const;
+
+export const instagramUrl = `https://www.instagram.com/${site.instagram}/`;
+export const mailtoHref = `mailto:${site.email}?subject=${encodeURIComponent(site.emailSubject)}`;
 
 export type NavLink = { label: string; href: string; download?: boolean };
 
 /** CV download — a static PDF served from `public/` (user-provided). */
 const cvLink: NavLink = { label: "Download CV", href: site.cvHref, download: true };
 
-/** Home nav — same-page anchors (Home omits an About link by design). */
+/**
+ * Header nav for pages that include the Contact section (Home, Work), so
+ * "Contact" scrolls on the same page.
+ */
 export const homeNav: NavLink[] = [
-  { label: "Work", href: "/#work" },
+  { label: "Work", href: "/work" },
+  { label: "Contact", href: "#contact" },
+  cvLink,
+];
+
+/** Header nav for project pages (no Contact section → jump to Home's). */
+export const interiorNav: NavLink[] = [
+  { label: "Work", href: "/work" },
   { label: "Contact", href: "/#contact" },
   cvLink,
 ];
 
-/** Interior-page nav (case study pages). */
-export const interiorNav: NavLink[] = [
-  { label: "Work", href: "/#work" },
-  { label: "Contact", href: "/#contact" },
+/** Footer nav, shared by every page. */
+export const footerNav: NavLink[] = [
+  { label: "Work", href: "/work" },
+  { label: "Space planning", href: "/work/space-planning" },
+  { label: "Instagram", href: instagramUrl },
+  { label: "Email", href: mailtoHref },
 ];
-
-/** Home footer nav includes a direct email link. */
-export const homeFooterNav: NavLink[] = [
-  { label: "Work", href: "/#work" },
-  { label: "Contact", href: "/#contact" },
-  { label: "Email", href: `mailto:${site.contactEmail}` },
-];
-
-/** Interior footer nav mirrors the interior header. */
-export const interiorFooterNav: NavLink[] = interiorNav;

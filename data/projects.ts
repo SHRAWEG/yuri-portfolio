@@ -9,6 +9,8 @@
  * time (dimensions are read from the files — see `lib/photos.ts`):
  *   - `hero.webp`      → cover (grid thumbnail + detail hero)
  *   - anything else    → gallery, ordered by filename (`2.webp` before `10.webp`)
+ *   - `before/…`       → "before" photos (optional), paired with after
+ *                        photos via `beforeAfter` below
  * A project with no folder just renders placeholders, so you can publish the
  * text first and add photos later.
  *
@@ -23,6 +25,41 @@
 
 export type GalleryLayout = "grid" | "stacked";
 
+/**
+ * ── Categories ───────────────────────────────────────────────────────────
+ * Each category is a folder on `/work`, opening to `/work/<id>`. To add one,
+ * add it here (this order = folder order) and tag projects with its `id`.
+ * Categories with no projects are hidden. `blurb` is draft copy.
+ */
+export const categories = [
+  {
+    id: "residential",
+    label: "Residential",
+    blurb: "Homes shaped around the people who live in them — living rooms, lounges and the spaces in between.",
+  },
+  {
+    id: "hospitality",
+    label: "Hotels & Resorts",
+    blurb: "Arrival halls, receptions and retreats designed to make a lasting first impression.",
+  },
+  {
+    id: "food-beverage",
+    label: "Restaurants & Cafés",
+    blurb: "Dining rooms and cafés where the setting is part of the experience.",
+  },
+  {
+    id: "nightlife",
+    label: "Nightlife",
+    blurb: "Bars and venues built for atmosphere, light and movement after dark.",
+  },
+] as const;
+
+export type CategoryId = (typeof categories)[number]["id"];
+
+export function categoryLabel(id: CategoryId): string {
+  return categories.find((c) => c.id === id)?.label ?? id;
+}
+
 export type Project = {
   slug: string;
   name: string;
@@ -33,13 +70,42 @@ export type Project = {
   /** Gallery arrangement on the page. Defaults to "grid". */
   layout?: GalleryLayout;
   scope?: string[];
+  /** Which `/work` folder this project lives in. */
+  category: CategoryId;
+  /** Short teaser used on the Home featured layout (falls back to `summary`). */
+  teaser?: string;
+  /**
+   * Before/after pairs, shown side by side on the project page. Paths are
+   * relative to `public/projects/<slug>/` — keep "before" photos in a
+   * `before/` subfolder so they stay out of the gallery. A pair may omit
+   * `after` to show a before photo on its own.
+   */
+  beforeAfter?: { before: string; after?: string }[];
 };
 
 // NOTE: `year` is a placeholder ("2024") and each `summary` is draft copy —
 // replace both with the real details per project.
 export const projects: Project[] = [
   {
+    slug: "shakya-residence-tengal",
+    category: "residential",
+    name: "Shakya Residence, Tengal",
+    location: "Tengal, Kathmandu",
+    year: "2026",
+    summary:
+      "Since this living room wasn't used every day, the client wanted to convert it into a bedroom while retaining seating for guests. Catering to the client's preference for ultra-luxury and white interiors, the design successfully balances a flashy aesthetic with timeless grace, creating a bright, versatile, and high-end multi-functional space.",
+    teaser: "A rarely used living room, converted into a bright, ultra-luxury bedroom that still seats guests.",
+    scope: ["Site Mapping", "Space Planning", "Design", "Material Selection"],
+    // Pairs are a best match by window/wall position — swap `after` files if needed.
+    beforeAfter: [
+      { before: "before/1.webp", after: "hero.webp" },
+      { before: "before/2.webp", after: "1.webp" },
+      { before: "before/3.webp", after: "3.webp" },
+    ],
+  },
+  {
     slug: "resort-dalchowki",
+    category: "hospitality",
     name: "Resort, Dalchowki",
     location: "Dalchowki, Lalitpur",
     year: "2026",
@@ -49,6 +115,7 @@ export const projects: Project[] = [
   },
   {
     slug: "restaurant-boudha",
+    category: "food-beverage",
     name: "Restaurant, Boudha",
     location: "Boudha, Kathmandu",
     year: "2025",
@@ -58,6 +125,7 @@ export const projects: Project[] = [
   },
   {
     slug: "hotel-reception-janakpur",
+    category: "hospitality",
     name: "Hotel Reception, Janakpur",
     location: "Janakpur",
     year: "2025",
@@ -67,6 +135,7 @@ export const projects: Project[] = [
   },
   {
     slug: "gallery-cafe-boudha",
+    category: "food-beverage",
     name: "Gallery Café, Boudha",
     location: "Boudha, Kathmandu",
     year: "2026",
@@ -76,6 +145,7 @@ export const projects: Project[] = [
   },
   {
     slug: "club-nova-thamel",
+    category: "nightlife",
     name: "Club Nova, Thamel",
     location: "Thamel, Kathmandu",
     year: "2025",
@@ -85,6 +155,7 @@ export const projects: Project[] = [
   },
   {
     slug: "ghiraiya-residence-jhamsikhel",
+    category: "residential",
     name: "Ghiraiya Residence, Jhamsikhel",
     location: "Jhamsikhel, Lalitpur",
     year: "2026",
@@ -94,6 +165,7 @@ export const projects: Project[] = [
   },
   {
     slug: "moore-residence-jhamsikhel",
+    category: "residential",
     name: "Moore Residence, Jhamsikhel",
     location: "Jhamsikhel, Lalitpur",
     year: "2024",
@@ -103,6 +175,7 @@ export const projects: Project[] = [
   },
   {
     slug: "goyal-residence-kuleswor",
+    category: "residential",
     name: "Goyal Residence, Kuleshwor",
     location: "Kuleshwor, Kathmandu",
     year: "2026",
@@ -112,6 +185,7 @@ export const projects: Project[] = [
   },
   {
     slug: "agrawal-residence-sanepa",
+    category: "residential",
     name: "Agrawal Residence, Sanepa",
     location: "Sanepa, Lalitpur",
     year: "2024",
